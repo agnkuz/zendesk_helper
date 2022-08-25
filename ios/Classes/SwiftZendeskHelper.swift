@@ -107,7 +107,7 @@ public class SwiftZendeskHelper: NSObject, FlutterPlugin {
         
         // Build view controller
         let chatEngine = try ChatEngine.engine()
-        let viewController = try Messaging.instance.buildUI(engines: [chatEngine], configs: [messagingConfiguration, chatConfiguration, chatUIConfiguration])
+        let viewController = try Messaging.instance.buildUI(engines: [chatEngine], configs: [messagingConfiguration, chatConfiguration])
         viewController.title = "Contact Us"
         if let theme = dictionary["isDarkTheme"] as? Bool {
             if #available(iOS 13.0, *) {
