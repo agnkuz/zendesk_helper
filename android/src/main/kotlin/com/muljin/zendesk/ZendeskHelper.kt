@@ -136,6 +136,10 @@ try {
         .withTranscriptEnabled(isChatTranscriptPromptEnabled)
         .withOfflineFormEnabled(isOfflineFormEnabled)
         .withPreChatFormEnabled(isPreChatFormEnabled)
+        .withNameFieldStatus(PreChatFormFieldStatus.REQUIRED)
+	      .withEmailFieldStatus(PreChatFormFieldStatus.REQUIRED)
+      	.withPhoneFieldStatus(PreChatFormFieldStatus.OPTIONAL)
+      	.withDepartmentFieldStatus(PreChatFormFieldStatus.OPTIONAL)
         .withChatMenuActions(ChatMenuAction.END_CHAT)
 
     val chatConfiguration = chatConfigurationBuilder.build()
