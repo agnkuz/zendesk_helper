@@ -63,6 +63,7 @@ public class SwiftZendeskHelper: NSObject, FlutterPlugin {
         let department = dictionary["department"] as? String ?? ""
         chatAPIConfig?.department = department
         chatAPIConfig?.visitorInfo = VisitorInfo(name: name, email: email, phoneNumber: phoneNumber)
+
         Chat.instance?.configuration = chatAPIConfig!
     }
     
@@ -101,7 +102,12 @@ public class SwiftZendeskHelper: NSObject, FlutterPlugin {
         
         // Build view controller
         let chatEngine = try ChatEngine.engine()
-        let viewController = try Messaging.instance.buildUI(engines: [chatEngine], configs: [messagingConfiguration, chatConfiguration])
+        let chatUIConfiguration = ChatConfiguration()
+        chatUIConfiguration.preChatFormConfiguration = .init(name: .required,
+                                              email: .required,
+                                              phoneNumber: .optional,
+                                              department: .optional)
+        let viewController = try Messaging.instance.buildUI(engines: [chatEngine], configs: [messagingConfiguration, chatConfiguration, chatUIConfiguration])
         viewController.title = "Contact Us"
         if let theme = dictionary["isDarkTheme"] as? Bool {
             if #available(iOS 13.0, *) {
