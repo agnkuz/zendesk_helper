@@ -99,14 +99,14 @@ public class SwiftZendeskHelper: NSObject, FlutterPlugin {
         chatConfiguration.isAgentAvailabilityEnabled = isAgentAvailabilityEnabled
         chatConfiguration.isChatTranscriptPromptEnabled = isChatTranscriptPromptEnabled
         chatConfiguration.isOfflineFormEnabled = isOfflineFormEnabled
-        
-        // Build view controller
-        let chatEngine = try ChatEngine.engine()
-        let chatUIConfiguration = ChatConfiguration()
-        chatUIConfiguration.preChatFormConfiguration = .init(name: .required,
+        let formConfiguration = ChatFormConfiguration(name: .required,
                                               email: .required,
                                               phoneNumber: .optional,
                                               department: .optional)
+        chatConfiguration.preChatFormConfiguration = formConfiguration
+        
+        // Build view controller
+        let chatEngine = try ChatEngine.engine()
         let viewController = try Messaging.instance.buildUI(engines: [chatEngine], configs: [messagingConfiguration, chatConfiguration, chatUIConfiguration])
         viewController.title = "Contact Us"
         if let theme = dictionary["isDarkTheme"] as? Bool {
