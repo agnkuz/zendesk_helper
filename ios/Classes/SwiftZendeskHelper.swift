@@ -41,6 +41,25 @@ public class SwiftZendeskHelper: NSObject, FlutterPlugin {
         case "removeTags":
             removeTags(dictionary: dic!)
             result(true)
+        case "sendMessage":
+            sendMessage(dictionary: dic!)
+            result(true)
+        case "endChat":
+            let isChatting = endChat { endChatResult in
+                switch endChatResult {
+                case .success:
+                    result(true)
+                case .failure(let error):
+                    result(FlutterError(code: "endChat", message: error.localizedDescription, details: "Failed endChat \(error)"))
+                }
+            }
+            if(!isChatting) {
+                result(true)
+            }
+        case "registerPushToken":
+            registerPushToken(dictionary: dic!, flutterResult: result)
+        case "unregisterPushToken":
+            result(unregisterPushToken())
         default:
             result("iOS " + UIDevice.current.systemVersion)
         }
@@ -61,7 +80,7 @@ public class SwiftZendeskHelper: NSObject, FlutterPlugin {
               let phoneNumber = dictionary["phoneNumber"] as? String
         else { return }
         let department = dictionary["department"] as? String ?? ""
-        chatAPIConfig?.department = department
+        chatAPIConfig?.departmentName = department
         chatAPIConfig?.visitorInfo = VisitorInfo(name: name, email: email, phoneNumber: phoneNumber)
         Chat.instance?.configuration = chatAPIConfig!
     }
@@ -80,9 +99,13 @@ public class SwiftZendeskHelper: NSObject, FlutterPlugin {
     
     func startChat(dictionary: Dictionary<String, Any>) throws {
         guard let isPreChatFormEnabled = dictionary["isPreChatFormEnabled"] as? Bool,
+              let isPreChatEmailField = dictionary["isPreChatEmailField"] as? Bool,
+              let isPreChatNameField = dictionary["isPreChatNameField"] as? Bool,
+              let isPreChatPhoneField = dictionary["isPreChatPhoneField"] as? Bool,
               let isAgentAvailabilityEnabled = dictionary["isAgentAvailabilityEnabled"] as? Bool,
               let isChatTranscriptPromptEnabled = dictionary["isChatTranscriptPromptEnabled"] as? Bool,
-              let isOfflineFormEnabled = dictionary["isOfflineFormEnabled"] as? Bool
+              let isOfflineFormEnabled = dictionary["isOfflineFormEnabled"] as? Bool,
+              let disableEndChatMenuAction = dictionary["disableEndChatMenuAction"] as? Bool
                 
         else {return}
         if let primaryColor = dictionary["primaryColor"] as? Int {
@@ -92,12 +115,19 @@ public class SwiftZendeskHelper: NSObject, FlutterPlugin {
         let messagingConfiguration = MessagingConfiguration()
         messagingConfiguration.name = dictionary["botName"] as? String ?? "Answer Bot"
         
+        let formConfiguration =  ChatFormConfiguration(name: isPreChatNameField ? .optional : .hidden,
+                                                       email: isPreChatEmailField ? .optional : .hidden,
+                                                       phoneNumber: isPreChatPhoneField ? .optional : .hidden)
+        
+        let chatMenuActions = disableEndChatMenuAction ?  [] : [.emailTranscript, .endChat] as Array<ChatMenuAction>         
         // Chat configuration
         let chatConfiguration = ChatConfiguration()
         chatConfiguration.isPreChatFormEnabled = isPreChatFormEnabled
+        chatConfiguration.preChatFormConfiguration = formConfiguration
         chatConfiguration.isAgentAvailabilityEnabled = isAgentAvailabilityEnabled
         chatConfiguration.isChatTranscriptPromptEnabled = isChatTranscriptPromptEnabled
         chatConfiguration.isOfflineFormEnabled = isOfflineFormEnabled
+        chatConfiguration.chatMenuActions =  chatMenuActions
         
         // Build view controller
         let chatEngine = try ChatEngine.engine()
@@ -140,6 +170,47 @@ public class SwiftZendeskHelper: NSObject, FlutterPlugin {
     func initChatConfig() {
         if (chatAPIConfig == nil) {
             chatAPIConfig = ChatAPIConfiguration()
+        }
+    }
+
+
+    func sendMessage(dictionary: Dictionary<String, Any>) {
+        guard let message = dictionary["message"] as? String
+        else { return }
+        
+        Chat.instance?.chatProvider.sendMessage(message)
+    }
+
+    private func endChat(completionHandler: @escaping ((Result<Bool, DeliveryStatusError>) -> Void)) -> Bool {
+        guard let chatProvider = Chat.instance?.chatProvider,
+          chatProvider.chatState.isChatting else {
+            return false
+        }
+
+        chatProvider.endChat(completionHandler)
+        return true
+    }
+    
+    private func registerPushToken(dictionary: Dictionary<String, Any>, flutterResult: FlutterResult) {
+        guard let pushProvider = Chat.instance?.pushNotificationsProvider,
+            let pushToken = dictionary["pushToken"] as? String else {
+            flutterResult(FlutterError(code: "pushToken", message: "pushToken is nil", details: nil))
+            return
+        }
+
+        pushProvider.registerPushTokenString(pushToken)
+        flutterResult(true)
+    }
+    
+    private func unregisterPushToken() -> Bool {
+        guard let pushProvider = Chat.instance?.pushNotificationsProvider else {
+            return true
+        }
+        do {
+            try pushProvider.unregisterPushToken()
+            return true
+        } catch {
+            return false
         }
     }
 }
