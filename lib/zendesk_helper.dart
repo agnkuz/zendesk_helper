@@ -58,6 +58,8 @@ class Zendesk {
   /// If [isPreChatPhoneField] is false, The field phone in pre-chat is hidden
   /// Optionally set bot's name using [botName]
   /// Optionally set toolbarTitle using [toolbarTitle]
+  /// If [isFullscreen] is true, the modal is open in fullscreen mode
+  /// If [close] is provided, the close button will be shown with the provided text
   static Future<void> startChat({
     bool? isDarkTheme,
     Color? primaryColor,
@@ -71,6 +73,8 @@ class Zendesk {
     bool disableEndChatMenuAction = false,
     String? botName = 'Answer Bot',
     String? toolbarTitle = 'Contact Us',
+    bool isFullscreen = false,
+    String? close = 'Close',
   }) async {
     await _channel.invokeMethod<void>('startChat', {
       'isDarkTheme': isDarkTheme,
@@ -85,6 +89,8 @@ class Zendesk {
       'disableEndChatMenuAction': disableEndChatMenuAction,
       'toolbarTitle': toolbarTitle,
       'botName': botName,
+      'isFullscreen': isFullscreen,
+      'close': close,
     });
   }
 
