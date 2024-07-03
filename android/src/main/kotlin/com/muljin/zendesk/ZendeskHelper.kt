@@ -241,7 +241,7 @@ try {
   }
 
   private fun setIdentity(call: MethodCall) {
-    val jwtToken = call.argument<String>("name")
+    val jwtToken = call.argument<String>("token")
     if (jwtToken.isNullOrEmpty()){
       return;
     }

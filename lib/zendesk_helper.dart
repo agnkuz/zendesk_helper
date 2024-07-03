@@ -129,4 +129,12 @@ class Zendesk {
   static Future<void> unregisterPushToken() async {
     await _channel.invokeMethod<void>('unregisterPushToken');
   }
+
+  /// Set the identity of the user using the provided [jwtToken]
+  /// this will cleanup previous setVisitorInfo
+  static Future<void> setIdentity(String jwtToken) async {
+    await _channel.invokeMethod<void>('setIdentity', {
+      'token': jwtToken,
+    });
+  }
 }
